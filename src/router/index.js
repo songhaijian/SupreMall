@@ -14,16 +14,16 @@ const routes = [
     },
     {
         path: "/home",
-        components: Home
+        component: Home
     }, {
         path: "/category",
-        components: Category
+        component: Category
     }, {
         path: "/cart",
-        components: Cart
+        component: Cart
     }, {
         path: "/profile",
-        components: Profile
+        component: Profile
     }
 ]
 export default new VueRouter({
