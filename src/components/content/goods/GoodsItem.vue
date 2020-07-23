@@ -1,6 +1,6 @@
 <template>
-    <div class="goods-item">
-        <img class="goods-img" :src="goodsItem.img" alt="">
+    <div class="goods-item" @click="handleGoodItemClick">
+        <img class="goods-img" :src="goodsItem.img" alt="" @load="handleImgLoad">
         <div>
             <p class="goods-name">{{goodsItem.user.name}}</p>
             <div class="goods-info">
@@ -21,6 +21,19 @@
                 default() {
                     return {}
                 }
+            }
+        },
+        methods: {
+            handleImgLoad() {
+                this.$bus.$emit('imgLoadComplete')
+            },
+            handleGoodItemClick() {
+                this.$router.push({
+                    path: "/gooddetail",
+                    query: {
+                        id: this.goodsItem.id
+                    }
+                })
             }
         }
     }

@@ -3,6 +3,12 @@
         <nav-bar class="home-nav">
             <div slot="center">购物街</div>
         </nav-bar>
+        <tab-control
+                class="home-tab-control page-tab-control"
+                :tab-control-list="['流行','新款','精选']"
+                @tabClick="handleTabClick"
+                ref="fixedTabControl"
+                v-show="isTabFixed"/>
         <scroll
                 class="home-scroll"
                 ref="scroll"
@@ -10,10 +16,14 @@
                 :enable-pull-up="true"
                 @scroll="handleScroll"
                 @pullDown="handlePullDown">
-            <home-swiper :banner-list="bannerList"/>
+            <home-swiper :banner-list="bannerList" @bannerSwiperLoadComplete="bannerSwiperLoadComplete"/>
             <recommend-view :recommend-list="recommendList"/>
             <popular-view/>
-            <tab-control class="home-tab-control" :tab-control-list="['流行','新款','精选']" @tabClick="handleTabClick"/>
+            <tab-control
+                    class="home-tab-control"
+                    :tab-control-list="['流行','新款','精选']"
+                    @tabClick="handleTabClick"
+                    ref="pageTabControl"/>
             <goods-list :goods-list="goodsObj[currentType].list"/>
         </scroll>
         <back-top @click.native="handleClickBackTop" v-show="showBackTop"/>
@@ -29,7 +39,7 @@
     import GoodsList from "../../../components/content/goods/GoodsList";
     import Scroll from "../../../components/common/scroll/Scroll";
     import BackTop from "../../../components/content/backtop/BackTop";
-    import {getHomeMultiData, getGoodsData} from "../../../network/home";
+    import {getGoodsData, getHomeMultiData} from "../../../network/home";
 
     export default {
         name: "Home",
@@ -65,16 +75,26 @@
                     }
                 },
                 currentType: 'pop',
-                showBackTop: false
+                showBackTop: false,
+                tabControlOffsetTop: 0,
+                isTabFixed: false
             }
         },
         created() {
             this.getBannerAndRecommendData()
             this.getGoodsList('pop')
-            // this.getGoodsList('new')
-            // this.getGoodsList('sell')
+            this.getGoodsList('new')
+            this.getGoodsList('sell')
+        },
+        mounted() {
+            this.$bus.$on("imgLoadComplete", () => {
+                this.$refs && this.$refs.scroll && this.$refs.scroll.sRefresh()
+            })
         },
         methods: {
+            bannerSwiperLoadComplete() {
+                this.tabControlOffsetTop = this.$refs.pageTabControl.$el.offsetTop
+            },
             handleTabClick(index) {
                 switch (index) {
                     case 0:
@@ -87,12 +107,15 @@
                         this.currentType = 'sell'
                         break
                 }
+                this.$refs.pageTabControl.currentIndex = index
+                this.$refs.fixedTabControl.currentIndex = index
             },
             handleClickBackTop() {
-                this.$refs.scroll.bScroll.scrollTo(0, 0, 500)
+                this.$refs && this.$refs.scroll && this.$refs.scroll.sScrollTo(0, 0, 500)
             },
             handleScroll(position) {
                 this.showBackTop = (-position.y) > 1000
+                this.isTabFixed = (-position.y) > this.tabControlOffsetTop
             },
             handlePullDown() {
                 this.getGoodsList(this.currentType)
@@ -109,7 +132,7 @@
                 getGoodsData(id, skip).then(value => {
                     this.goodsObj[type].list.push(...value.res.vertical)
                     this.goodsObj[type].page += 1
-                    this.$refs.scroll.bScroll.finishPullUp()
+                    this.$refs && this.$refs.scroll && this.$refs.scroll.sFinishUpLoad()
                 })
             }
         }
@@ -118,7 +141,6 @@
 
 <style scoped>
     .home-wrap {
-        /*padding-top: 44px;*/
         position: relative;
         height: 100vh;
     }
@@ -126,16 +148,13 @@
     .home-nav {
         background-color: var(--color-tint);
         color: #ffffff;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
+        position: relative;
         z-index: 100;
     }
 
-    .home-tab-control {
-        position: sticky;
-        top: 44px;
+    .page-tab-control {
+        position: relative;
+        z-index: 100;
     }
 
     .home-scroll {

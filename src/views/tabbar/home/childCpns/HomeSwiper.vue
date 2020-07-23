@@ -3,7 +3,7 @@
         <swiper>
             <swiper-item v-for="bannerItem in bannerList">
                 <a :href="bannerItem.link">
-                    <img :src="bannerItem.image"/>
+                    <img :src="bannerItem.image" @load="bannerSwiperLoadComplete"/>
                 </a>
             </swiper-item>
         </swiper>
@@ -23,9 +23,22 @@
                 }
             }
         },
+        data() {
+            return {
+                isSendComplete: false
+            }
+        },
         components: {
             Swiper,
             SwiperItem
+        },
+        methods: {
+            bannerSwiperLoadComplete() {
+                if (!this.isSendComplete) {
+                    this.isSendComplete = true
+                    this.$emit('bannerSwiperLoadComplete')
+                }
+            }
         }
     }
 </script>
